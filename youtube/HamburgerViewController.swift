@@ -12,6 +12,10 @@ class HamburgerViewController: UIViewController {
 
     var menuViewController: MenuViewController!
     var feedViewController: FeedViewController!
+    var menuTransform = CATransform3DIdentity
+    var feedTransform = CATransform3DIdentity
+//    var transform = CGAffineTransformMakeScale(0.9, 0.9)
+    
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -20,32 +24,45 @@ class HamburgerViewController: UIViewController {
        
        feedViewController = storyboard?.instantiateViewControllerWithIdentifier("FeedViewController") as FeedViewController
         
-        self.addChildViewController(menuViewController)
         self.addChildViewController(feedViewController)
+        self.addChildViewController(menuViewController)
         
         view.addSubview(menuViewController.view)
         view.addSubview(feedViewController.view)
         
-        menuViewController.view.transform = CGAffineTransformMakeScale(0.9, 0.9)
+        menuTransform.m34 = 1.0/2500.0
+        menuTransform = CATransform3DTranslate(menuTransform, -160, 0, 0)    // translate 50% to the right
+        menuTransform = CATransform3DRotate(menuTransform, CGFloat(120 * M_PI / 180), 0, 1, 0) // rotate 90 degrees
+        menuTransform = CATransform3DTranslate(menuTransform, 160, 0, 0)   // translate 50% to the left
+        menuViewController.view.layer.transform = menuTransform
+        menuViewController.view.alpha = 0.5
+        
+        feedTransform.m34 = 1.0 / 2500.0
+        feedTransform = CATransform3DTranslate(feedTransform, 320, 0, 0)    // translate 50% to the right
+        feedTransform = CATransform3DRotate(feedTransform, CGFloat(68 * M_PI / 180), 0, 1, 0) // rotate 90 degrees
+        feedTransform = CATransform3DTranslate(feedTransform, -320, 0, 0)   // translate 50% to the left
     }
 
     @IBAction func onDrag(sender: UIPanGestureRecognizer) {
         var velocity = sender.velocityInView(view)
         
+        
         if sender.state == UIGestureRecognizerState.Ended {
             if velocity.x > 0 {
                 // swiping menu to the right reveals the menu underneath the feed
-                UIView.animateWithDuration(0.5, animations: { () -> Void in
-                    self.feedViewController.view.frame.origin.x  = 270
-                    self.menuViewController.view.transform = CGAffineTransformMakeScale(1.0, 1.0)
+                UIView.animateWithDuration(2, animations: { () -> Void in
+                  //  self.feedViewController.view.frame.origin.x  = 270
+                    self.feedViewController.view.layer.transform = self.feedTransform
+                    self.menuViewController.view.alpha = 1
+                    self.menuViewController.view.layer.transform = CATransform3DIdentity
                 })
-                
             } else {
                 // swiping menu to the left puts the menu back in its default place
-                UIView.animateWithDuration(0.5, animations: { () -> Void in
-                    self.feedViewController.view.frame.origin.x  = 0
-                    self.menuViewController.view.transform = CGAffineTransformMakeScale(0.9, 0.9)
-
+                UIView.animateWithDuration(2, animations: { () -> Void in
+                  //  self.feedViewController.view.frame.origin.x  = 0
+                    self.feedViewController.view.layer.transform = CATransform3DIdentity
+                    self.menuViewController.view.alpha = 0.5
+                    self.menuViewController.view.layer.transform = self.menuTransform
                 })
             }
         }
